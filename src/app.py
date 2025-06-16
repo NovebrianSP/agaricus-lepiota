@@ -1,16 +1,11 @@
 import pandas as pd
-import pickle
 import streamlit as st
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
-# Load the model and label encoders
-with open('rf_mushroom.pkl', 'rb') as f:
-    model = pickle.load(f)
-
-with open('le_dict.pkl', 'rb') as f:
-    le_dict = pickle.load(f)
-
-# Load the dataset and prepare columns
-df_map = pd.read_csv('agaricus-lepiota-mapped.csv')
+# Load dataset dan mapping kolom
+df = pd.read_csv('agaricus-lepiota-mapped.csv')
 column_mapping = {
     'class': 'kelas',
     'odor': 'bau',
@@ -21,12 +16,25 @@ column_mapping = {
     'population': 'populasi',
     'habitat': 'habitat'
 }
-df_map.rename(columns=column_mapping, inplace=True)
-
-# Pilih hanya fitur penting
+df.rename(columns=column_mapping, inplace=True)
 selected_cols = ['bau', 'warna_spora', 'warna_insang', 'ukuran_insang', 'memar', 'populasi', 'habitat', 'kelas']
-df_map = df_map[selected_cols]
-columns = [col for col in df_map.columns if col != 'kelas']
+df = df[selected_cols]
+
+# Encode
+le_dict = {}
+for col in df.columns:
+    le = LabelEncoder()
+    df[col] = le.fit_transform(df[col])
+    le_dict[col] = le
+
+# Split & train
+X = df.drop('kelas', axis=1)
+y = df['kelas']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+columns = [col for col in df.columns if col != 'kelas']
 
 # Sidebar untuk navigasi halaman
 st.sidebar.title("Menu")
@@ -38,11 +46,11 @@ if page == "Dashboard":
     for col in ['bau', 'warna_spora']:
         label = col.replace('_', ' ').title()
         st.subheader(f"Distribusi Jumlah Jamur Berdasarkan {label}")
-        st.bar_chart(df_map[col].value_counts())
+        st.bar_chart(df[col].value_counts())
     st.markdown("---")
     st.write("Contoh data:")
     # Ubah nama kolom pada tabel contoh data
-    df_display = df_map.copy()
+    df_display = df.copy()
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head())
 
