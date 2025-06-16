@@ -45,15 +45,19 @@ if page == "Dashboard":
     # Tampilkan distribusi fitur penting dengan nama kolom yang lebih rapi
     for col in ['bau', 'warna_spora']:
         label = col.replace('_', ' ').title()
+        # Ambil value_counts dan mapping ke label asli
+        value_counts = df[col].value_counts().sort_index()
+        labels = le_dict[col].inverse_transform(value_counts.index)
+        value_counts.index = labels
         st.subheader(f"Distribusi Jumlah Jamur Berdasarkan {label}")
-        st.bar_chart(df[col].value_counts())
+        st.bar_chart(value_counts)
     st.markdown("---")
     st.write("Contoh data:")
     # Ubah nama kolom pada tabel contoh data
     df_display = df.copy()
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head())
-
+    
 elif page == "Rekomendasi":
     st.title("Mushroom Classification App")
     st.subheader("Masukkan Fitur Jamur untuk Prediksi")
