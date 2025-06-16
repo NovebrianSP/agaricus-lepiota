@@ -42,10 +42,8 @@ page = st.sidebar.radio("Pilih Halaman", ("Dashboard", "Rekomendasi"))
 
 if page == "Dashboard":
     st.title("Dashboard Jamur")
-    # Tampilkan distribusi fitur penting dengan nama kolom yang lebih rapi
     for col in ['bau', 'warna_spora']:
         label = col.replace('_', ' ').title()
-        # Ambil value_counts dan mapping ke label asli
         value_counts = df[col].value_counts().sort_index()
         labels = le_dict[col].inverse_transform(value_counts.index)
         value_counts.index = labels
@@ -53,8 +51,11 @@ if page == "Dashboard":
         st.bar_chart(value_counts)
     st.markdown("---")
     st.write("Contoh data:")
-    # Ubah nama kolom pada tabel contoh data
+    # Tampilkan kata asli pada tabel contoh data
     df_display = df.copy()
+    for col in df_display.columns:
+        if col in le_dict:
+            df_display[col] = le_dict[col].inverse_transform(df_display[col])
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head())
     
