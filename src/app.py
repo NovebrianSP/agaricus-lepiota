@@ -63,6 +63,26 @@ if page == "Dashboard":
         value_counts.index = labels
         st.subheader(f"Distribusi Jamur: {label}")
         st.bar_chart(value_counts)
+
+    # --- Tampilkan gambar spora sesuai kategori ---
+    st.markdown("### Contoh Gambar Warna Spora")
+    spora_label_to_file = {
+        "coklat": "spora-coklat-jamur.jpg",
+        "coklat tua": "spora-coklattua-jamur.jpg",
+        "hitam": "spora-hitam-jamur.jpg",
+        "krem": "spora-krem-jamur.jpg",
+        "kuning": "spora-kuning-jamur.png",
+        "oranye": "spora-oranye-jamur.jpg",
+        "putih": "spora-putih-jamur.jpg",
+        "ungu": "spora-ungu-jamur.jpg"
+    }
+    spora_labels = le_dict['warna_spora'].classes_
+    cols = st.columns(4)
+    for idx, label in enumerate(spora_labels):
+        filename = spora_label_to_file.get(label.lower())
+        if filename:
+            with cols[idx % 4]:
+                st.image(f"../images/{filename}", caption=label.title(), use_column_width=True)
     st.markdown("---")
     st.write("Contoh Data:")
     # Tampilkan kata asli pada tabel contoh data
@@ -72,7 +92,7 @@ if page == "Dashboard":
             df_display[col] = le_dict[col].inverse_transform(df_display[col])
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head(), use_container_width=True)
-
+    
 elif page == "Klasifikasi":
     st.title("Klasifikasi Jamur")
     st.subheader("Masukkan Fitur Jamur")
