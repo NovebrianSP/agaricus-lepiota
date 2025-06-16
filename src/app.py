@@ -3,6 +3,9 @@ import streamlit as st
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+import os
+import json
+from datetime import datetime
 
 # CSS untuk responsif dan tabel compact
 st.markdown("""
@@ -82,7 +85,15 @@ if page == "Dashboard":
         filename = spora_label_to_file.get(label.lower())
         if filename:
             with cols[idx % 4]:
-                st.image(f"images/{filename}", caption=label.title(), use_container_width=True)
+                st.markdown(
+                    f"""
+                    <div style="display:flex;justify-content:center;">
+                        <img src="images/{filename}" alt="{label.title()}" style="object-fit:cover;width:120px;height:120px;border-radius:10px;border:1px solid #eee;">
+                    </div>
+                    <div style="text-align:center;font-size:0.9em;">{label.title()}</div>
+                    """,
+                    unsafe_allow_html=True
+                )
     st.markdown("---")
     st.write("Contoh Data:")
     # Tampilkan kata asli pada tabel contoh data
