@@ -86,7 +86,7 @@ if page == "Dashboard":
                     f"images/{filename}",
                     caption=label.title(),
                     width=120,
-                    use_container_width=False
+                    use_container_width=True
                 )
     st.markdown("---")
     st.write("Contoh Data:")
