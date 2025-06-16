@@ -52,7 +52,7 @@ columns = [col for col in df.columns if col != 'kelas']
 
 # Sidebar untuk navigasi halaman
 st.sidebar.title("Menu")
-page = st.sidebar.radio("Pilih Halaman", ("Dashboard", "Rekomendasi"))
+page = st.sidebar.radio("Pilih Halaman", ("Dashboard", "Klasifikasi"))
 
 if page == "Dashboard":
     st.title("Dashboard Jamur")
