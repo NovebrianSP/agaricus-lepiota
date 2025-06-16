@@ -82,7 +82,15 @@ if page == "Dashboard":
         filename = spora_label_to_file.get(label.lower())
         if filename:
             with cols[idx % 4]:
-                st.image(f"images/{filename}", caption=label.title(), use_container_width=True)
+                st.markdown(
+                    f"""
+                    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                        <img src="images/{filename}" alt="{label.title()}" style="object-fit:cover;width:120px;height:120px;border-radius:10px;border:1px solid #eee;background:#222;">
+                        <div style="margin-top:6px;text-align:center;font-size:0.95em;">{label.title()}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
     st.markdown("---")
     st.write("Contoh Data:")
     # Tampilkan kata asli pada tabel contoh data
