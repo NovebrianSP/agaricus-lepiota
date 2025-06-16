@@ -85,7 +85,7 @@ if page == "Dashboard":
                 st.markdown(
                     f"""
                     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
-                        <img src="images/{filename}" alt="{label.title()}" style="object-fit:cover;width:120px;height:120px;border-radius:10px;border:1px solid #eee;background:#222;">
+                        <img src="images/{filename}" alt="{label.title()}" style="object-fit:cover;width:240px;height:240px;border-radius:10px;border:1px solid #eee;background:#222;">
                         <div style="margin-top:6px;text-align:center;font-size:0.95em;">{label.title()}</div>
                     </div>
                     """,
