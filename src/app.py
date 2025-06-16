@@ -73,7 +73,7 @@ if page == "Dashboard":
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head(), use_container_width=True)
 
-elif page == "Rekomendasi":
+elif page == "Klasifikasi":
     st.title("Klasifikasi Jamur")
     st.subheader("Masukkan Fitur Jamur")
 
