@@ -79,7 +79,7 @@ elif page == "Rekomendasi":
 
     # User input responsif: 2 kolom per baris di desktop, 1 kolom di mobile
     input_features = {}
-    n_cols = 2 if st.columns(2)[0].width > 300 else 1
+    n_cols = 2
     input_cols = st.columns(n_cols)
     for idx, col in enumerate(columns):
         label = col.replace('_', ' ').title()
