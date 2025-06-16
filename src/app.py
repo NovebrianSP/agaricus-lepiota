@@ -61,7 +61,7 @@ if page == "Dashboard":
         value_counts = df[col].value_counts().sort_index()
         labels = le_dict[col].inverse_transform(value_counts.index)
         value_counts.index = labels
-        st.subheader(f"Distribusi Jamur: {label}")
+        st.subheader(f"Distribusi Jamur Berdasarkan: {label}")
         st.bar_chart(value_counts)
 
     # --- Tampilkan gambar spora sesuai kategori ---
