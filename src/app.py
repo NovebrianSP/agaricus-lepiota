@@ -82,7 +82,7 @@ if page == "Dashboard":
         filename = spora_label_to_file.get(label.lower())
         if filename:
             with cols[idx % 4]:
-                st.image(f"../images/{filename}", caption=label.title(), use_column_width=True)
+                st.image(f"images/{filename}", caption=label.title(), use_container_width=True)
     st.markdown("---")
     st.write("Contoh Data:")
     # Tampilkan kata asli pada tabel contoh data
