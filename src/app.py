@@ -4,6 +4,20 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
+# CSS untuk responsif dan tabel compact
+st.markdown("""
+    <style>
+    /* Tabel responsif dan font kecil */
+    .stDataFrame, .stTable {font-size: 0.85em;}
+    .stDataFrame th, .stDataFrame td {padding: 0.2em 0.5em;}
+    @media (max-width: 600px) {
+        .stDataFrame, .stTable {font-size: 0.7em;}
+        .stDataFrame th, .stDataFrame td {padding: 0.1em 0.2em;}
+        .block-container {padding-left: 0.5rem; padding-right: 0.5rem;}
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Load dataset dan mapping kolom
 df = pd.read_csv('agaricus-lepiota-mapped.csv')
 column_mapping = {
@@ -47,31 +61,34 @@ if page == "Dashboard":
         value_counts = df[col].value_counts().sort_index()
         labels = le_dict[col].inverse_transform(value_counts.index)
         value_counts.index = labels
-        st.subheader(f"Distribusi Jumlah Jamur Berdasarkan {label}")
+        st.subheader(f"Distribusi Jamur: {label}")
         st.bar_chart(value_counts)
     st.markdown("---")
-    st.write("Contoh data:")
+    st.write("Contoh Data:")
     # Tampilkan kata asli pada tabel contoh data
     df_display = df.copy()
     for col in df_display.columns:
         if col in le_dict:
             df_display[col] = le_dict[col].inverse_transform(df_display[col])
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
-    st.dataframe(df_display.head())
-    
-elif page == "Rekomendasi":
-    st.title("Mushroom Classification App")
-    st.subheader("Masukkan Fitur Jamur untuk Prediksi")
+    st.dataframe(df_display.head(), use_container_width=True)
 
-    # User input
+elif page == "Rekomendasi":
+    st.title("Klasifikasi Jamur")
+    st.subheader("Masukkan Fitur Jamur")
+
+    # User input responsif: 2 kolom per baris di desktop, 1 kolom di mobile
     input_features = {}
-    for col in columns:
+    n_cols = 2 if st.columns(2)[0].width > 300 else 1
+    input_cols = st.columns(n_cols)
+    for idx, col in enumerate(columns):
         label = col.replace('_', ' ').title()
         options = le_dict[col].classes_
-        input_features[col] = st.selectbox(f"Pilih {label}", options)
+        with input_cols[idx % n_cols]:
+            input_features[col] = st.selectbox(f"{label}", options, key=col)
 
     # Prediction
-    if st.button('Predict'):
+    if st.button('Prediksi'):
         input_data = []
         for col in columns:
             le = le_dict[col]
@@ -95,9 +112,9 @@ elif page == "Rekomendasi":
         with col1:
             st.markdown(
                 f"""
-                <div style="padding:16px;border-radius:8px;background:{edible_color};text-align:center;">
+                <div style="padding:12px;border-radius:8px;background:{edible_color};text-align:center;">
                     <b>Bisa Dimakan</b><br>
-                    <span style="font-size:1.5em;">{edible_score:.2f} / 10</span>
+                    <span style="font-size:1.2em;">{edible_score:.2f} / 10</span>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -105,9 +122,9 @@ elif page == "Rekomendasi":
         with col2:
             st.markdown(
                 f"""
-                <div style="padding:16px;border-radius:8px;background:{poisonous_color};text-align:center;">
+                <div style="padding:12px;border-radius:8px;background:{poisonous_color};text-align:center;">
                     <b>Beracun</b><br>
-                    <span style="font-size:1.5em;">{poisonous_score:.2f} / 10</span>
+                    <span style="font-size:1.2em;">{poisonous_score:.2f} / 10</span>
                 </div>
                 """,
                 unsafe_allow_html=True
