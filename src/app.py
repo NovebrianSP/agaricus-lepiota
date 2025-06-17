@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import pickle
+import os
 
 # CSS responsif
 st.markdown("""
@@ -16,9 +17,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Load model & encoder
-with open('rf_mushroom.pkl', 'rb') as f:
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+with open(os.path.join(BASE_DIR, 'rf_mushroom.pkl'), 'rb') as f:
     model = pickle.load(f)
-with open('le_dict.pkl', 'rb') as f:
+with open(os.path.join(BASE_DIR, 'le_dict.pkl'), 'rb') as f:
     le_dict = pickle.load(f)
 
 # Load dataset untuk tampilan dashboard
