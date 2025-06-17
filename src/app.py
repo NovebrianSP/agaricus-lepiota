@@ -50,8 +50,6 @@ if page == "Dashboard":
     for col in ['bau', 'warna_spora']:
         label = col.replace('_', ' ').title()
         value_counts = df[col].value_counts().sort_index()
-        labels = le_dict[col].inverse_transform(value_counts.index)
-        value_counts.index = labels
         st.subheader(f"Distribusi Jamur Berdasarkan: {label}")
         st.bar_chart(value_counts)
     st.markdown("---")
