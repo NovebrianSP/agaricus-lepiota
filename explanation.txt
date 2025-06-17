@@ -1,0 +1,177 @@
+Penjelasan processing.py
+------------------------
+Script ini melakukan mapping kode kategori pada dataset jamur (agaricus-lepiota.data) menjadi label string yang mudah dibaca, lalu menyimpan hasilnya ke file CSV (agaricus-lepiota-mapped.csv).
+
+Line-by-line:
+
+1 | import pandas as pd
+    # Mengimpor library pandas untuk manipulasi data.
+
+2 | input_file = 'agaricus-lepiota.data'
+3 | output_file = 'agaricus-lepiota-mapped.csv'
+    # Mendefinisikan nama file input (data asli) dan output (hasil mapping).
+
+4 | columns = [ ... ]
+    # Mendefinisikan nama kolom sesuai dokumentasi UCI agar data mudah diakses.
+
+5 | mapping_dict = { ... }
+    # Dictionary untuk mapping kode kategori (misal 'e', 'p', 'b', dst) ke label string (misal 'bisa dimakan', 'beracun', dst).
+
+6 | df = pd.read_csv(input_file, header=None, names=columns)
+    # Membaca file data asli tanpa header, lalu memberi nama kolom sesuai list columns.
+
+7 | for col in columns:
+8 |     if col in mapping_dict:
+9 |         df[col] = df[col].map(mapping_dict[col])
+    # Untuk setiap kolom yang ada di mapping_dict, lakukan mapping dari kode ke label string.
+
+10 | df.to_csv(output_file, index=False)
+    # Menyimpan hasil mapping ke file CSV tanpa index.
+
+------------------------------------------------------
+
+Penjelasan training.py
+----------------------
+Script ini melakukan training model Random Forest pada data hasil mapping, melakukan encoding label, dan menyimpan model serta encoder ke file .pkl.
+
+Line-by-line:
+
+1 | import pandas as pd
+2 | import pickle
+3 | from sklearn.ensemble import RandomForestClassifier
+4 | from sklearn.model_selection import train_test_split
+5 | from sklearn.preprocessing import LabelEncoder
+    # Mengimpor library yang dibutuhkan untuk manipulasi data, encoding, training, dan penyimpanan model.
+
+6 | df = pd.read_csv('agaricus-lepiota-mapped.csv')
+    # Membaca data hasil mapping dari file CSV.
+
+7 | column_mapping = {
+8 |     'class': 'kelas',
+9 |     'odor': 'bau',
+10|     'spore-print-color': 'warna_spora',
+11|     'gill-color': 'warna_insang',
+12|     'gill-size': 'ukuran_insang',
+13|     'bruises': 'memar',
+14|     'population': 'populasi',
+15|     'habitat': 'habitat'
+16| }
+    # Mapping nama kolom dari bahasa Inggris ke Indonesia agar lebih mudah digunakan.
+
+17| df.rename(columns=column_mapping, inplace=True)
+    # Mengganti nama kolom pada dataframe sesuai mapping di atas.
+
+18| selected_cols = ['bau', 'warna_spora', 'warna_insang', 'ukuran_insang', 'memar', 'populasi', 'habitat', 'kelas']
+19| df = df[selected_cols]
+    # Memilih hanya kolom yang relevan untuk training.
+
+20| le_dict = {}
+21| for col in df.columns:
+22|     le = LabelEncoder()
+23|     df[col] = le.fit_transform(df[col])
+24|     le_dict[col] = le
+    # Melakukan encoding label pada setiap kolom menggunakan LabelEncoder dan menyimpan encoder ke dictionary.
+
+25| X = df.drop('kelas', axis=1)
+26| y = df['kelas']
+    # Memisahkan data fitur (X) dan label (y).
+
+27| X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    # Membagi data menjadi data training dan testing (80:20).
+
+28| model = RandomForestClassifier(n_estimators=8000, random_state=42)
+29| model.fit(X_train, y_train)
+    # Membuat dan melatih model Random Forest dengan 8000 pohon.
+
+30| with open('rf_mushroom.pkl', 'wb') as f:
+31|     pickle.dump(model, f)
+    # Menyimpan model hasil training ke file .pkl.
+
+32| with open('le_dict.pkl', 'wb') as f:
+33|     pickle.dump(le_dict, f)
+    # Menyimpan dictionary encoder ke file .pkl untuk digunakan pada aplikasi prediksi.
+
+------------------------------------------------------
+
+Penjelasan app.py (jika ingin menambahkan)
+------------------------------------------
+Script ini adalah aplikasi Streamlit untuk menampilkan dashboard dan melakukan prediksi klasifikasi jamur.
+
+Line-by-line (inti):
+
+1 | import pandas as pd
+2 | import streamlit as st
+3 | import pickle
+4 | import os
+    # Mengimpor library yang dibutuhkan.
+
+5-15 | # CSS responsif untuk tampilan tabel di Streamlit.
+
+16| BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    # Mendapatkan path folder tempat app.py berada.
+
+17| with open(os.path.join(BASE_DIR, 'rf_mushroom.pkl'), 'rb') as f:
+18|     model = pickle.load(f)
+19| with open(os.path.join(BASE_DIR, 'le_dict.pkl'), 'rb') as f:
+20|     le_dict = pickle.load(f)
+    # Memuat model dan encoder dari file .pkl.
+
+21| df = pd.read_csv(os.path.join(BASE_DIR, 'agaricus-lepiota-mapped.csv'))
+    # Membaca data hasil mapping.
+
+22-34 | # Mapping nama kolom dan memilih kolom yang relevan.
+
+35| columns = [col for col in df.columns if col != 'kelas']
+    # Mendapatkan list fitur (tanpa kolom kelas).
+
+36-38 | # Sidebar navigasi Streamlit.
+
+39-... | # Dashboard: menampilkan distribusi fitur, contoh data, dan akurasi model.
+    # Kode untuk menghitung akurasi model:
+    # benar = (y == y_pred).sum()
+    # total = len(y)
+    # akurasi = benar / total * 100
+
+... | # Klasifikasi: form input fitur, prediksi, dan tampilan hasil sesuai skor edible.
+
+------------------------------------------------------
+
+Penjelasan accuracy.py (jika ingin menambahkan)
+-----------------------------------------------
+Script ini digunakan untuk menguji akurasi model pada seluruh data.
+
+Line-by-line:
+
+1 | import pandas as pd
+2 | import pickle
+3 | import os
+4 | from sklearn.metrics import accuracy_score
+    # Mengimpor library yang dibutuhkan.
+
+5| BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+6| with open(os.path.join(BASE_DIR, 'rf_mushroom.pkl'), 'rb') as f:
+7|     model = pickle.load(f)
+8| with open(os.path.join(BASE_DIR, 'le_dict.pkl'), 'rb') as f:
+9|     le_dict = pickle.load(f)
+    # Memuat model dan encoder.
+
+10| df = pd.read_csv(os.path.join(BASE_DIR, 'agaricus-lepiota-mapped.csv'))
+    # Membaca data hasil mapping.
+
+11-21 | # Mapping nama kolom dan memilih kolom yang relevan.
+
+22| for col in df.columns:
+23|     le = le_dict[col]
+24|     df[col] = le.transform(df[col])
+    # Melakukan encoding pada data.
+
+25| X = df.drop('kelas', axis=1)
+26| y = df['kelas']
+
+27| y_pred = model.predict(X)
+28| benar = (y == y_pred).sum()
+29| total = len(y)
+30| akurasi = benar / total * 100
+31| print(f"Akurasi model pada seluruh data: {akurasi:.2f}%")
+    # Menghitung dan menampilkan akurasi model secara manual dalam persen.
