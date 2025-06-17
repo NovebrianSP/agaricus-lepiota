@@ -101,4 +101,4 @@ elif page == "Klasifikasi":
         elif 6.0 <= edible_score < 8.0:
             st.warning(f"Skor edible: {edible_score:.2f} / 10\n\nJamur ini **tidak disarankan dimakan**.")
         else:
-            st.error(f"Skor edible: {edible_score:.2f} / 10\n\nJamur ini
+            st.error(f"Skor edible: {edible_score:.2f} / 10\n\nJamur ini **tidak bisa dimakan**.")
