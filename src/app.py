@@ -3,6 +3,8 @@ import streamlit as st
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
+import xgboost as xgb
+from sklearn.metrics import accuracy_score
 
 # CSS untuk responsif dan tabel compact
 st.markdown("""
@@ -45,8 +47,9 @@ for col in df.columns:
 X = df.drop('kelas', axis=1)
 y = df['kelas']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-model = RandomForestClassifier(n_estimators=100, random_state=42)
+model = xgb.XGBClassifier(n_estimators=8000, random_state=42, use_label_encoder=False, eval_metric='mlogloss')
 model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
 
 columns = [col for col in df.columns if col != 'kelas']
 
@@ -61,7 +64,7 @@ if page == "Dashboard":
         value_counts = df[col].value_counts().sort_index()
         labels = le_dict[col].inverse_transform(value_counts.index)
         value_counts.index = labels
-        st.subheader(f"Distribusi Jamur: {label}")
+        st.subheader(f"Distribusi Jamur Berdasarkan: {label}")
         st.bar_chart(value_counts)
 
     # --- Tampilkan gambar spora sesuai kategori ---
@@ -156,6 +159,8 @@ elif page == "Klasifikasi":
             )
 
         # Hasil utama
+        acc = accuracy_score(y_test, y_pred)
+        st.write(f"Akurasi XGBoost: {acc:.4f}")
         pred = model.predict(input_df)[0]
         prediction = class_le.inverse_transform([pred])[0]
         if prediction == 'beracun':
