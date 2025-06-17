@@ -1,15 +1,10 @@
 import pandas as pd
 import streamlit as st
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-import xgboost as xgb
-from sklearn.metrics import accuracy_score
+import pickle
 
-# CSS untuk responsif dan tabel compact
+# CSS responsif
 st.markdown("""
     <style>
-    /* Tabel responsif dan font kecil */
     .stDataFrame, .stTable {font-size: 0.85em;}
     .stDataFrame th, .stDataFrame td {padding: 0.2em 0.5em;}
     @media (max-width: 600px) {
@@ -20,7 +15,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Load dataset dan mapping kolom
+# Load model & encoder
+with open('rf_mushroom.pkl', 'rb') as f:
+    model = pickle.load(f)
+with open('le_dict.pkl', 'rb') as f:
+    le_dict = pickle.load(f)
+
+# Load dataset untuk tampilan dashboard
 df = pd.read_csv('agaricus-lepiota-mapped.csv')
 column_mapping = {
     'class': 'kelas',
@@ -35,25 +36,9 @@ column_mapping = {
 df.rename(columns=column_mapping, inplace=True)
 selected_cols = ['bau', 'warna_spora', 'warna_insang', 'ukuran_insang', 'memar', 'populasi', 'habitat', 'kelas']
 df = df[selected_cols]
-
-# Encode
-le_dict = {}
-for col in df.columns:
-    le = LabelEncoder()
-    df[col] = le.fit_transform(df[col])
-    le_dict[col] = le
-
-# Split & train
-X = df.drop('kelas', axis=1)
-y = df['kelas']
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-model = xgb.XGBClassifier(n_estimators=8000, random_state=42, use_label_encoder=False, eval_metric='mlogloss')
-model.fit(X_train, y_train)
-y_pred = model.predict(X_test)
-
 columns = [col for col in df.columns if col != 'kelas']
 
-# Sidebar untuk navigasi halaman
+# Sidebar
 st.sidebar.title("Menu")
 page = st.sidebar.radio("Pilih Halaman", ("Dashboard", "Klasifikasi"))
 
@@ -66,76 +51,39 @@ if page == "Dashboard":
         value_counts.index = labels
         st.subheader(f"Distribusi Jamur Berdasarkan: {label}")
         st.bar_chart(value_counts)
-
-    # --- Tampilkan gambar spora sesuai kategori ---
-    st.markdown("### Contoh Gambar Warna Spora")
-    spora_label_to_file = {
-        "coklat": "spora-coklat-jamur.jpg",
-        "coklat tua": "spora-coklattua-jamur.jpg",
-        "hitam": "spora-hitam-jamur.jpg",
-        "krem": "spora-krem-jamur.jpg",
-        "kuning": "spora-kuning-jamur.png",
-        "oranye": "spora-oranye-jamur.jpg",
-        "putih": "spora-putih-jamur.jpg",
-        "ungu": "spora-ungu-jamur.jpg"
-    }
-    spora_labels = le_dict['warna_spora'].classes_
-    cols = st.columns(4)
-    for idx, label in enumerate(spora_labels):
-        filename = spora_label_to_file.get(label.lower())
-        if filename:
-            with cols[idx % 4]:
-                st.image(
-                    f"images/{filename}",
-                    caption=label.title(),
-                    width=120,
-                    use_container_width=True
-                )
     st.markdown("---")
     st.write("Contoh Data:")
-    # Tampilkan kata asli pada tabel contoh data
     df_display = df.copy()
     for col in df_display.columns:
         if col in le_dict:
             df_display[col] = le_dict[col].inverse_transform(df_display[col])
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head(), use_container_width=True)
-    
+
 elif page == "Klasifikasi":
     st.title("Klasifikasi Jamur")
     st.subheader("Masukkan Fitur Jamur")
-
-    # User input responsif: 2 kolom per baris di desktop, 1 kolom di mobile
     input_features = {}
-    n_cols = 2
-    input_cols = st.columns(n_cols)
+    cols_input = st.columns(2)
     for idx, col in enumerate(columns):
         label = col.replace('_', ' ').title()
         options = le_dict[col].classes_
-        with input_cols[idx % n_cols]:
+        with cols_input[idx % 2]:
             input_features[col] = st.selectbox(f"{label}", options, key=col)
-
-    # Prediction
     if st.button('Prediksi'):
         input_data = []
         for col in columns:
             le = le_dict[col]
             val_enc = le.transform([input_features[col]])[0]
             input_data.append(val_enc)
-        
         input_df = pd.DataFrame([input_data], columns=columns)
         proba = model.predict_proba(input_df)[0]
         class_le = le_dict['kelas']
         class_names = class_le.inverse_transform([0, 1])
-
-        # Skor 0-10
         edible_score = proba[class_names.tolist().index('bisa dimakan')] * 10
         poisonous_score = proba[class_names.tolist().index('beracun')] * 10
-
-        # Warna dinamis
         edible_color = f"rgba(0, 200, 0, {edible_score/10:.2f})"
         poisonous_color = f"rgba(200, 0, 0, {poisonous_score/10:.2f})"
-
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(
@@ -157,10 +105,6 @@ elif page == "Klasifikasi":
                 """,
                 unsafe_allow_html=True
             )
-
-        # Hasil utama
-        acc = accuracy_score(y_test, y_pred)
-        st.write(f"Akurasi XGBoost: {acc:.4f}")
         pred = model.predict(input_df)[0]
         prediction = class_le.inverse_transform([pred])[0]
         if prediction == 'beracun':
