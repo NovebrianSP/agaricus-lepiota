@@ -60,6 +60,20 @@ if page == "Dashboard":
             df_display[col] = le_dict[col].inverse_transform(df_display[col])
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head(), use_container_width=True)
+    
+    # Hitung akurasi model pada seluruh data
+    for col in df.columns:
+        le = le_dict[col]
+        df[col] = le.transform(df[col])
+    X = df.drop('kelas', axis=1)
+    y = df['kelas']
+    y_pred = model.predict(X)
+    benar = (y == y_pred).sum()
+    total = len(y)
+    akurasi = benar / total * 100  # dalam persen
+
+    # Tampilkan di dashboard
+    st.metric("Akurasi Model", f"{akurasi:.2f}%")
 
 elif page == "Klasifikasi":
     st.title("Klasifikasi Jamur")
