@@ -18,14 +18,13 @@ st.markdown("""
 
 # Load model & encoder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 with open(os.path.join(BASE_DIR, 'rf_mushroom.pkl'), 'rb') as f:
     model = pickle.load(f)
 with open(os.path.join(BASE_DIR, 'le_dict.pkl'), 'rb') as f:
     le_dict = pickle.load(f)
 
 # Load dataset untuk tampilan dashboard
-df = pd.read_csv('agaricus-lepiota-mapped.csv')
+df = pd.read_csv(os.path.join(BASE_DIR, 'agaricus-lepiota-mapped.csv'))
 column_mapping = {
     'class': 'kelas',
     'odor': 'bau',
@@ -60,7 +59,7 @@ if page == "Dashboard":
             df_display[col] = le_dict[col].inverse_transform(df_display[col])
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head(), use_container_width=True)
-    
+
     # Hitung akurasi model pada seluruh data
     for col in df.columns:
         le = le_dict[col]
@@ -71,8 +70,6 @@ if page == "Dashboard":
     benar = (y == y_pred).sum()
     total = len(y)
     akurasi = benar / total * 100  # dalam persen
-
-    # Tampilkan di dashboard
     st.metric("Akurasi Model", f"{akurasi:.2f}%")
 
 elif page == "Klasifikasi":
@@ -97,32 +94,11 @@ elif page == "Klasifikasi":
         class_names = class_le.inverse_transform([0, 1])
         edible_score = proba[class_names.tolist().index('bisa dimakan')] * 10
         poisonous_score = proba[class_names.tolist().index('beracun')] * 10
-        edible_color = f"rgba(0, 200, 0, {edible_score/10:.2f})"
-        poisonous_color = f"rgba(200, 0, 0, {poisonous_score/10:.2f})"
-        col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(
-                f"""
-                <div style="padding:12px;border-radius:8px;background:{edible_color};text-align:center;">
-                    <b>Bisa Dimakan</b><br>
-                    <span style="font-size:1.2em;">{edible_score:.2f} / 10</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        with col2:
-            st.markdown(
-                f"""
-                <div style="padding:12px;border-radius:8px;background:{poisonous_color};text-align:center;">
-                    <b>Beracun</b><br>
-                    <span style="font-size:1.2em;">{poisonous_score:.2f} / 10</span>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        pred = model.predict(input_df)[0]
-        prediction = class_le.inverse_transform([pred])[0]
-        if prediction == 'beracun':
-            st.error(f'Prediksi kelas jamur: {prediction}')
+
+        # Tampilkan hasil sesuai kondisi edible_score
+        if edible_score >= 8.0:
+            st.success(f"Skor edible: {edible_score:.2f} / 10\n\nJamur ini **dapat dimakan**.")
+        elif 6.0 <= edible_score < 8.0:
+            st.warning(f"Skor edible: {edible_score:.2f} / 10\n\nJamur ini **tidak disarankan dimakan**.")
         else:
-            st.success(f'Prediksi kelas jamur: {prediction}')
+            st.error(f"Skor edible: {edible_score:.2f} / 10\n\nJamur ini
