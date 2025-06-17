@@ -56,7 +56,7 @@ if page == "Dashboard":
     st.write("Contoh Data:")
     df_display = df.copy()
     for col in df_display.columns:
-        if col in le_dict:
+        if col in le_dict and pd.api.types.is_integer_dtype(df_display[col]):
             df_display[col] = le_dict[col].inverse_transform(df_display[col])
     df_display.columns = [c.replace('_', ' ').title() for c in df_display.columns]
     st.dataframe(df_display.head(), use_container_width=True)
