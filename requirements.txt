@@ -2,3 +2,6 @@ streamlit
 scikit-learn
 pandas
 xgboost
+plotly
+numpy
+pillow
